@@ -2,7 +2,7 @@ import re
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from utils.config import DATE_COLUMN_CANDIDATES
+from .config import DATE_COLUMN_CANDIDATES
 
 from .logging import get_logger
 from .models import QueryFilter
@@ -58,13 +58,13 @@ def extract_query_components(user_text:str)-> QueryFilter:
         logger.debug(f"Extracted IN clause for column {col}: {vals}")
 
     # Extract equality filters
-    for match in re.finditer(r"([a-zA-Z0-9_]+)\s*=\s*'([^']+)'", user_text, re.IGNORECASE):
+    for match in re.finditer(r"([a-zA-Z0-9_]+)\s*=\s*([^\s,\)]+)", user_text, re.IGNORECASE):
         col = match.group(1).strip().lower()
-        val = match.group(2).strip()
+        val = match.group(2).strip().strip("'\"")
         # Skip SQL keywords
-        if col.lower() in ("from","select","where","limit","group","by"):
+        if col.lower() in ("from","select","where","limit","order","group","by"):
             continue
-
+        logger.debug(f"Extracted equality filter for column {col}: {val}")
         # Prefer IN clause values if both exist
         if col not in result.filters:
             result.filters[col] = val

@@ -46,8 +46,8 @@ class QueryFilter(BaseModel):
     """Model for a filter applied to a query."""
 
     columns: List[str] = Field(default_factory=list, description="The columns the filter is applied to.")
-    filters: List[str] = Field(
-        default_factory=list, description="The list of filters applied to the columns."
+    filters: Dict[str, Any] = Field(
+        default_factory=dict, description="A mapping of column names to filter values."
     )
     start_date: Optional[str] = Field(
         None, description="The start date for date range filters."
