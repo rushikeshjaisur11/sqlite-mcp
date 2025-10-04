@@ -1,9 +1,9 @@
 import sqlite3
 import threading
 from contextlib import contextmanager
-from typing import Dict, List, Optional, Generator
+from typing import Dict, Generator, List, Optional
 
-from .config import db_config,MAX_QUERY_TIMEOUT
+from .config import db_config
 from .logging import get_logger
 
 logger = get_logger(__name__)

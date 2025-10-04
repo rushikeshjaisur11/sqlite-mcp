@@ -43,10 +43,9 @@ class MCPResponse(BaseModel):
 
 
 class QueryFilter(BaseModel):
-    """Model for a filter applied to a query.
-    """
+    """Model for a filter applied to a query."""
 
-    columns: str = Field(..., description="The columns the filter is applied to.")
+    columns: List[str] = Field(default_factory=list, description="The columns the filter is applied to.")
     filters: List[str] = Field(
         default_factory=list, description="The list of filters applied to the columns."
     )
