@@ -1,0 +1,13 @@
+[project]
+name = "sqllite-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["uv"]
+
+[project.scripts]
+sqllite-mcp = "main:main"
