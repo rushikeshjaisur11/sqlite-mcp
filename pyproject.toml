@@ -11,3 +11,9 @@ dev = ["uv"]
 
 [project.scripts]
 sqllite-mcp = "main:main"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C90", "B", "I", "D", "Q"]
+ignore = ["E501", "D100", "D104", "D107"]
+exclude = ["node_modules", ".venv", "venv", "__pypackages__"]

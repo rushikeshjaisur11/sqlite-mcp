@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 # Database configuration
 DATABASE_PATH = os.getenv("DATABASE_PATH", "database.db")
@@ -33,8 +32,7 @@ LOG_FORMAT = "%(asctime)s - %(filename)s - %(levelname)s - %(message)s"
 
 
 class DatabaseConfig:
-    """
-    Configuration class for database connection.
+    """Configuration class for database connection.
     """
 
     def __init__(self, db_path: str = DATABASE_PATH):
@@ -45,8 +43,7 @@ class DatabaseConfig:
 
     @property
     def get_connection_string(self) -> str:
-        """
-        Returns the connection string for the database.
+        """Returns the connection string for the database.
         """
         return self.db_path
 

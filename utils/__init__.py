@@ -1,14 +1,14 @@
-from .config import MAX_ROWS_BUDGET, MAX_PREVIESW_ROWS
+from .config import MAX_PREVIESW_ROWS, MAX_ROWS_BUDGET
 from .models import (
-    MCPResponse,
-    MCPRequest,
-    QueryFilter,
-    TablePreviewRequest,
     ColumnStatsRequest,
-    FindTablesRequest,
-    TableSchemaRequest,
     DataBaseConnectionRequest,
     ErrorResponse,
+    FindTablesRequest,
+    MCPRequest,
+    MCPResponse,
+    QueryFilter,
+    TablePreviewRequest,
+    TableSchemaRequest,
 )
 
 ROWS_BUDGET = MAX_ROWS_BUDGET

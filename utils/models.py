@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class MCPRequest(BaseModel):
-    """
-    Request model for mcp queries.
+    """Request model for mcp queries.
     """
 
     user_text: str = Field(
@@ -20,8 +20,7 @@ class MCPRequest(BaseModel):
 
 
 class MCPResponse(BaseModel):
-    """
-    Response model for mcp queries.
+    """Response model for mcp queries.
     """
 
     sql_preview: str = Field(
@@ -44,8 +43,7 @@ class MCPResponse(BaseModel):
 
 
 class QueryFilter(BaseModel):
-    """
-    Model for a filter applied to a query.
+    """Model for a filter applied to a query.
     """
 
     columns: str = Field(..., description="The columns the filter is applied to.")
@@ -67,8 +65,7 @@ class QueryFilter(BaseModel):
 
 
 class TablePreviewRequest(BaseModel):
-    """
-    Request model for table preview.
+    """Request model for table preview.
     """
 
     table: str = Field(..., description="The table to preview.")
@@ -76,8 +73,7 @@ class TablePreviewRequest(BaseModel):
 
 
 class ColumnStatsRequest(BaseModel):
-    """
-    Request model for column statistics.
+    """Request model for column statistics.
     """
 
     table: str = Field(..., description="The table to get column statistics from.")
@@ -85,8 +81,7 @@ class ColumnStatsRequest(BaseModel):
 
 
 class FindTablesRequest(BaseModel):
-    """
-    Request model for finding tables.
+    """Request model for finding tables.
     """
 
     column_name: str = Field(
@@ -95,24 +90,21 @@ class FindTablesRequest(BaseModel):
 
 
 class TableSchemaRequest(BaseModel):
-    """
-    Request model for table schema.
+    """Request model for table schema.
     """
 
     table: str = Field(..., description="The table to get the schema for.")
 
 
 class DataBaseConnectionRequest(BaseModel):
-    """
-    Request model for database connection.
+    """Request model for database connection.
     """
 
     pass  # No fields required for this request
 
 
 class ErrorResponse(BaseModel):
-    """
-    Response model for errors.
+    """Response model for errors.
     """
 
     error: str = Field(..., description="The error message.")
