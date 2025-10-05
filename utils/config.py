@@ -29,7 +29,7 @@ DATE_COLUMN_CANDIDATES = [
 
 # Logging configuration
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-LOG_FORMAT = "%(asctime)s - %(filename)s - %(levelname)s - %(message)s"
+LOG_FORMAT = "%(asctime)s - %(filename)s:%(lineno)s - [%(levelname)s] - %(message)s"
 
 
 class DatabaseConfig:

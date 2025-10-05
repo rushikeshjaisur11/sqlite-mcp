@@ -267,7 +267,6 @@ class QueryService:
         return self._db_manager.execute_query(sql, params or {})
 
 
-query_service = QueryService()
 
 
 def get_query_service(db_path: Optional[str] = None) -> QueryService:

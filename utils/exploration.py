@@ -274,11 +274,8 @@ class ExplorationService:
             return f"Error querying table data: {e}"
 
 
-exploration_service = ExplorationService()
-
-
 def get_exploration_service(db_path: Optional[str] = None) -> ExplorationService:
     """Get the exploration service instance."""
     if db_path:
         return ExplorationService(db_path)
-    return exploration_service
+    return ExplorationService()

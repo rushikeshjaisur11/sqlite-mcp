@@ -99,14 +99,15 @@ class DatabaseManager:
     def get_table_schema(self, table_name: str) -> Dict[str, str]:
         """Get the schema of a table as a dictionary."""
         query = f"PRAGMA table_info({table_name})"
-
         try:
             with self.get_cursor() as cursor:
                 cursor.execute(query)
                 rows = cursor.fetchall()
 
                 if not rows:
-                    raise ValueError(f"Table '{table_name}' does not exist.")
+                    raise ValueError(
+                        f"Table '{table_name}' does not exist., query : {query}"
+                    )
 
                 type_mapping = {
                     "INTEGER": "INTEGER",
@@ -152,14 +153,14 @@ class DatabaseManager:
 
     def table_exists(self, table_name: str) -> bool:
         """Check if a table exists in the database."""
-        query = """
+        query = f"""
         SELECT name 
         FROM sqlite_master 
-        WHERE type='table' AND name=?
+        WHERE type='table' AND lower(name) ='{table_name}'
         """
         try:
             with self.get_cursor() as cursor:
-                cursor.execute(query, (table_name,))
+                cursor.execute(query)
                 return cursor.fetchone() is not None
         except Exception as e:
             logger.error(f"Database operation error: {e}")

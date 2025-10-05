@@ -19,9 +19,9 @@ logger = get_logger(__name__)
 class SQLiteService:
     """Service for interacting with SQLite database."""
 
-    def __init__(self):
-        self.exploration_service = get_exploration_service()
-        self.query_service = get_query_service()
+    def __init__(self, db_path: Optional[str] = None):
+        self.exploration_service = get_exploration_service(db_path)
+        self.query_service = get_query_service(db_path)
 
     def query_table(self, request: MCPRequest) -> str:
         try:
@@ -176,9 +176,6 @@ class SQLiteService:
             return f"Error: {error_response.error} - {error_response.details}"
 
 
-sqlite_service = SQLiteService()
-
-
-def get_sqlite_service() -> SQLiteService:
+def get_sqlite_service(db_path: Optional[str] = None) -> SQLiteService:
     """Get the SQLite service instance."""
-    return sqlite_service
+    return SQLiteService(db_path)
