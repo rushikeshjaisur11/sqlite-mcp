@@ -185,7 +185,7 @@ class ExplorationService:
             result = f"Database overview - Found {len(tables)} tables.\n\n"
             for table in tables:
                 try:
-                    row_count = self.db_manager.get_table_row_count(table)
+                    row_count = self.db_manager.get_row_count(table)
                     table_schema = self.db_manager.get_table_schema(table)
                     col_count = len(table_schema)
                     result += f"   - {table}: {row_count} rows, {col_count} columns\n"
@@ -224,7 +224,7 @@ class ExplorationService:
             for col, dtype in table_schema.items():
                 result += f"  {col}: {dtype}\n"
 
-            row_count = self.db_manager.get_table_row_count(table)
+            row_count = self.db_manager.get_row_count(table)
             result += f"\nTotal Rows : {row_count:,}"
 
             return result

@@ -230,7 +230,7 @@ class QueryService:
                 sampling_sql = self._add_sampling(sql, SAMPLING_RATE)
                 sampling_estimated = int(estimated_rows * SAMPLING_RATE)
 
-                if sampling_estimated <= (rows.budget or MAX_ROWS_BUDGET):
+                if sampling_estimated <= (request.rows_budget or MAX_ROWS_BUDGET):
                     try:
                         rows = self._db_manager.execute_query(sampling_sql, params)
                         execution_time = time.time() - start_time
@@ -265,8 +265,6 @@ class QueryService:
     ) -> list[dict[str, Any]]:
         """Execute a raw SQL query and return the response."""
         return self._db_manager.execute_query(sql, params or {})
-
-
 
 
 def get_query_service(db_path: Optional[str] = None) -> QueryService:

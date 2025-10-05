@@ -1,3 +1,4 @@
+from token import OP
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -9,7 +10,7 @@ class MCPRequest(BaseModel):
     user_text: str = Field(
         ..., description="The query input from the user in natural langauge."
     )
-    table: str = Field(..., description="The table to query.")
+    table: Optional[str] = Field(..., description="The table to query.")
     rows_budget: Optional[int] = Field(
         10, description="The number of rows to return from the table."
     )
