@@ -27,18 +27,18 @@ class MCPResponse(BaseModel):
         ..., description="The SQL query generated from the user input."
     )
     params: Dict[str, Any] = Field(..., description="The parameters for the SQL query.")
-    estimated_rows: int = Field(
-        ..., description="The estimated number of rows the SQL query will return."
+    estimated_rows: Optional[int] = Field(
+        None, description="The estimated number of rows the SQL query will return."
     )
     auto_applied: List[str] = Field(
         ..., description="The list of auto applied filters."
     )
-    rows: List[Dict[str, Any]] = Field(
-        ..., description="The rows returned from the SQL query."
+    rows: Optional[List[Dict[str, Any]]] = Field(
+        None, description="The rows returned from the SQL query."
     )
     note: Optional[str] = Field(None, description="A note about the query.")
-    execution_time: float = Field(
-        ..., description="The time taken to execute the query in seconds."
+    execution_time: Optional[float] = Field(
+        None, description="The time taken to execute the query in seconds."
     )
 
 

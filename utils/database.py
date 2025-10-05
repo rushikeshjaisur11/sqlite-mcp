@@ -1,75 +1,190 @@
 import sqlite3
 import threading
 from contextlib import contextmanager
-from typing import Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
-from .config import db_config
+from .config import MAX_QUERY_TIMEOUT, db_config
 from .logging import get_logger
 
 logger = get_logger(__name__)
+
+def dict_factory(cursor,row):
+    """Convert SQLite row to a dictionary."""
+    fields = [columns[0] for columns in cursor.description]
+    return {key:value for key,value in zip(fields,row, strict=False)}
 
 class DatabaseManager:
     """Manages SQLite database connections and operations."""
 
     def __init__(self, db_path: str):
-        self.db_path = db_path
-        self.connection = None
-        self.lock = threading.Lock()
-        self.connect()
+       self._local = threading.local()
+       self._db_path = db_config.db_path
+       logger.info(f"Database manager initialized for : {self._db_path}")
 
-    def connect(self):
-        """Establish a database connection."""
+    def _get_connection(self) -> sqlite3.Connection:
+        """Get thread-local connection"""
+        if not hasattr(self._local, "connection") or self._local.connection is None:
+            self._local.connection = sqlite3.connect(self._db_path,
+                                                     timeout = db_config.timeout,
+                                                     isolation_level = db_config.isolation_level,
+                                                     check_same_thread=False
+                                                     )
+            self._local.connection.row_factory = dict_factory
+        return self._local.connection
+
+    @contextmanager
+    def get_connection(self) -> Generator[sqlite3.Connection, None, None]:
+        """Context manager for database connection."""
+        conn = None
         try:
-            self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
-            self.connection.row_factory = sqlite3.Row
-            logger.info(f"Connected to database at {self.db_path}")
-        except sqlite3.Error as e:
+            conn = self._get_connection()
+            yield conn
+        except Exception as e:
+            if conn:
+                conn.rollback()
             logger.error(f"Database connection error: {e}")
             raise
 
-    def close(self):
-        """Close the database connection."""
-        if self.connection:
-            self.connection.close()
-            logger.info("Database connection closed.")
-
     @contextmanager
     def get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
-        """Context manager for database cursor."""
-        with self.lock:
-            cursor = self.connection.cursor()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
             try:
                 yield cursor
-                self.connection.commit()
-            except sqlite3.Error as e:
-                self.connection.rollback()
-                logger.error(f"Database operation error: {e}")
-                raise
             finally:
                 cursor.close()
 
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict]:
+    def execute_query(self,query:str,params:Optional[Dict[str,Any]]=None) -> List[Dict[str,Any]]:
         """Execute a query and return results as a list of dictionaries."""
-        with self.get_cursor() as cursor:
-            if params is None:
-                params = ()
-            logger.debug(f"Executing query: {query} with params: {params}")
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            result = [dict(row) for row in rows]
-            logger.debug(f"Query returned {len(result)} rows.")
-            return result
+        try:
+            with self.get_cursor() as cursor:
+                if params:
+                    param_list = []
+                    modified_query = query
+                    for key,value in params.items():
+                        if isinstance(value,list):
+                            placeholders = ",".join(["?"]*len(value))
+                            modified_query = modified_query.replace(f":{key}",f"({placeholders})")
+                            param_list.extend(value)
+                        else:
+                            modified_query = modified_query.replace(f":{key}","?")
+                            param_list.append(value)
+                    cursor.execute(modified_query,param_list)
+                else:
+                    cursor.execute(query)
 
-    def execute_non_query(self, query: str, params: Optional[tuple] = None) -> int:
-        """Execute a non-query (INSERT, UPDATE, DELETE) and return affected row count."""
-        with self.get_cursor() as cursor:
-            if params is None:
-                params = ()
-            logger.debug(f"Executing non-query: {query} with params: {params}")
-            cursor.execute(query, params)
-            affected_rows = cursor.rowcount
-            logger.debug(f"Non-query affected {affected_rows} rows.")
-            return affected_rows
+                return cursor.fetchall()
+        except sqlite3.Error as e:
+            logger.error(f"Database operation error: {e}")
+            logger.error(f"Query: {query}")
+            logger.error(f"Params: {params}")
+            raise
+
+    def execute_query_with_timeout(self,query:str,params:Optional[Dict[str,Any]]=None,
+                                   timeout:int= MAX_QUERY_TIMEOUT
+                                   ) -> List[Dict[str,Any]]:
+        """Execute a query with a timeout and return results as a list of dictionaries."""
+        return self.execute_query(query,params)
+
+    def get_table_schema(self,table_name:str)->Dict[str,str]:
+        """Get the schema of a table as a dictionary."""
+        query = f"PRAGMA table_info({table_name})"
+
+        try:
+            with self.get_cursor() as cursor:
+                cursor.execute(query)
+                rows = cursor.fetchall()
+
+                if not rows:
+                    raise ValueError(f"Table '{table_name}' does not exist.")
+
+                type_mapping = {
+                    "INTEGER":"INTEGER",
+                    "INT":"INTEGER",
+                    "REAL":"REAL",
+                    "FLOAT":"REAL",
+                    "DOUBLE":"REAL",
+                    "TEXT":"TEXT",
+                    "VARCHAR":"TEXT",
+                    "CHAR":"TEXT",
+                    "BLOB":"BLOB",
+                    "NUMERIC":"NUMERIC",
+                    "DATE":"DATE",
+                    "DATETIME":"DATETIME",
+                    "TIMESTAMP":"TIMESTAMP",
+                }
+
+                schema = {}
+                for row in rows:
+                    col_name = row["name"].lower()
+                    col_type = row["type"].upper() if row["type"] else "TEXT"
+
+                    for sqlite_type,sql_type in type_mapping.items():
+                        if sql_type in col_type:
+                            col_type = sql_type
+                            break
+                    schema[col_name] = col_type
+                return schema
+        except Exception as e:
+            logger.error(f"Database operation error: {e}")
+
+    def get_table_info(self,table_name:str) -> List[Dict[str,Any]]:
+        """Get information about a table as a list of dictionaries."""
+        query = f"PRAGMA table_info({table_name})"
+        try:
+            with self.get_cursor() as cursor:
+                cursor.execute(query)
+                return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Database operation error: {e}")
+            raise
+
+    def table_exists(self,table_name:str) -> bool:
+        """Check if a table exists in the database."""
+        query = """
+        SELECT name 
+        FROM sqlite_master 
+        WHERE type='table' AND name=?
+        """
+        try:
+            with self._get_cursor() as cursor:
+                cursor.execute(query,(table_name,))
+                return cursor.fetchone() is not None
+        except Exception as e:
+            logger.error(f"Database operation error: {e}")
+            raise
+
+    def get_row_count(self,table_name:str)->int:
+        """Get the number of rows in a table."""
+        query = f"SELECT COUNT(*) FROM {table_name}"
+        try:
+            with self._get_cursor() as cursor:
+                cursor.execute(query)
+                return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"Database operation error: {e}")
+            raise
+
+    def get_all_tables(self) -> List[str]:
+        """Get a list of all tables in the database."""
+        query = """SELECT name 
+                 FROM sqlite_master WHERE type='table'
+                 AND name NOT LIKE 'sqlite_%'
+                 ORDER BY name
+                 """
+        try:
+            with self._get_cursor() as cursor:
+                cursor.execute(query)
+                return [row["name"] for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Database operation error: {e}")
+            return []
+    def close(self):
+        """Close the database connection."""
+        if hasattr(self._local, "connection"):
+            self._local.connection.close()
+            self._local.connection = None
+            logger.info("Database connection closed.")
 
 
 db_manager = DatabaseManager(db_config.get_connection_string)

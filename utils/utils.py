@@ -3,7 +3,6 @@ from datetime import date, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from .config import DATE_COLUMN_CANDIDATES
-
 from .logging import get_logger
 from .models import QueryFilter
 
