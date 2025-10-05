@@ -1,7 +1,7 @@
 import re
 import time
 from datetime import date, timedelta
-from typing import Any, Optional, tuple
+from typing import Any, Optional
 
 from .config import DEFAULT_LIMIT, DEFAULT_WINDOW_DAYS, MAX_ROWS_BUDGET, SAMPLING_RATE
 from .database import get_db_manager

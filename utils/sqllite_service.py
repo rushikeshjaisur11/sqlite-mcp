@@ -2,7 +2,12 @@ from .database import get_db_manager
 from .exploration import get_exploration_service
 from .models import (
     MCPRequest,
-    TablePreviewRequest,ColumnStatsRequest, FindTablesRequest, TableSchemaRequest,DatabaseConectionRequest,ErrorResponse
+    TablePreviewRequest,
+    ColumnStatsRequest,
+    FindTablesRequest,
+    TableSchemaRequest,
+    ErrorResponse,
+    DataBaseConnectionRequest
 )
 from .query_utils import get_query_service
 
@@ -88,4 +93,48 @@ class SQLiteService:
             error_response = ErrorResponse(error=f"Error getting all tables",details=str(e),success=False)
             return f"Error: {error_response.error} - {error_response.details}"
         
+    def get_table_schema_info(self,request:TableSchemaRequest) -> str:
+        """Get the schema information for a table."""
+        try:
+            return self.exploration_service.get_table_schema_info(request.table)
+        except Exception as e:
+            error_response = ErrorResponse(error=f"Error getting table schema info",details=str(e),success=False)
+            return f"Error: {error_response.error} - {error_response.details}"
     
+    def get_database_overview(self) -> str:
+        """Get an overview of the database structure."""
+        try:
+            return self.exploration_service.get_database_overview()
+        except Exception as e:
+            error_response = ErrorResponse(error=f"Error getting database overview",details=str(e),success=False)
+            return f"Error: {error_response.error} - {error_response.details}"
+    
+    def test_connection(self, request: DataBaseConnectionRequest) -> str:
+        """Test the connection to the database."""
+        try:
+            db_manager = get_db_manager()
+            with db_manager.get_cursor() as cursor:
+                cursor.execute("select sqlite_version()")
+                version = cursor.fetchone()
+                # Get Database file info 
+                cursor.execute("PRAGMA database_list")
+                db_info = cursor.fetchone()
+                # Get table content
+                cursor.execute("select count(*) as count from sqlite_master where type = 'table'")
+                table_count = cursor.fetchone()
+                
+                cursor.close()
+                
+                return f"""Connection Successfull !!!!
+            SQLite Version : {version['sqlite_version()']}
+            Database : {db_info['file'] if db_info else 'N/A'}
+            Tables : {table_count['count'] if table_count else '0'}"""
+        except Exception as e:
+            error_response = ErrorResponse(error=f"Error testing connection",details=str(e),success=False)
+            return f"Error: {error_response.error} - {error_response.details}"
+        
+sqlite_service = SQLiteService()
+
+def get_sqlite_service() -> SQLiteService:
+    """Get the SQLite service instance."""
+    return sqlite_service

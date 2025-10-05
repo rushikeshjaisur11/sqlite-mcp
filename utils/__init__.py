@@ -10,6 +10,8 @@ from .models import (
     TablePreviewRequest,
     TableSchemaRequest,
 )
+from .sqllite_service import get_sqlite_service
+
 
 ROWS_BUDGET = MAX_ROWS_BUDGET
 __all__ = [
@@ -24,4 +26,5 @@ __all__ = [
     "TableSchemaRequest",
     "DataBaseConnectionRequest",
     "ErrorResponse",
+    "get_sqlite_service"
 ]

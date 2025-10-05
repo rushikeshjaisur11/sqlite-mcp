@@ -8,27 +8,30 @@ from .logging import get_logger
 
 logger = get_logger(__name__)
 
-def dict_factory(cursor,row):
+
+def dict_factory(cursor, row):
     """Convert SQLite row to a dictionary."""
     fields = [columns[0] for columns in cursor.description]
-    return {key:value for key,value in zip(fields,row, strict=False)}
+    return {key: value for key, value in zip(fields, row, strict=False)}
+
 
 class DatabaseManager:
     """Manages SQLite database connections and operations."""
 
-    def __init__(self, db_path: str):
-       self._local = threading.local()
-       self._db_path = db_config.db_path
-       logger.info(f"Database manager initialized for : {self._db_path}")
+    def __init__(self, db_path: Optional[str] = None):
+        self._local = threading.local()
+        self._db_path = db_path or db_config.db_path
+        logger.info(f"Database manager initialized for : {self._db_path}")
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get thread-local connection"""
         if not hasattr(self._local, "connection") or self._local.connection is None:
-            self._local.connection = sqlite3.connect(self._db_path,
-                                                     timeout = db_config.timeout,
-                                                     isolation_level = db_config.isolation_level,
-                                                     check_same_thread=False
-                                                     )
+            self._local.connection = sqlite3.connect(
+                self._db_path,
+                timeout=db_config.timeout,
+                isolation_level=db_config.isolation_level,
+                check_same_thread=False,
+            )
             self._local.connection.row_factory = dict_factory
         return self._local.connection
 
@@ -54,22 +57,26 @@ class DatabaseManager:
             finally:
                 cursor.close()
 
-    def execute_query(self,query:str,params:Optional[Dict[str,Any]]=None) -> List[Dict[str,Any]]:
+    def execute_query(
+        self, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """Execute a query and return results as a list of dictionaries."""
         try:
             with self.get_cursor() as cursor:
                 if params:
                     param_list = []
                     modified_query = query
-                    for key,value in params.items():
-                        if isinstance(value,list):
-                            placeholders = ",".join(["?"]*len(value))
-                            modified_query = modified_query.replace(f":{key}",f"({placeholders})")
+                    for key, value in params.items():
+                        if isinstance(value, list):
+                            placeholders = ",".join(["?"] * len(value))
+                            modified_query = modified_query.replace(
+                                f":{key}", f"({placeholders})"
+                            )
                             param_list.extend(value)
                         else:
-                            modified_query = modified_query.replace(f":{key}","?")
+                            modified_query = modified_query.replace(f":{key}", "?")
                             param_list.append(value)
-                    cursor.execute(modified_query,param_list)
+                    cursor.execute(modified_query, param_list)
                 else:
                     cursor.execute(query)
 
@@ -80,13 +87,16 @@ class DatabaseManager:
             logger.error(f"Params: {params}")
             raise
 
-    def execute_query_with_timeout(self,query:str,params:Optional[Dict[str,Any]]=None,
-                                   timeout:int= MAX_QUERY_TIMEOUT
-                                   ) -> List[Dict[str,Any]]:
+    def execute_query_with_timeout(
+        self,
+        query: str,
+        params: Optional[Dict[str, Any]] = None,
+        timeout: int = MAX_QUERY_TIMEOUT,
+    ) -> List[Dict[str, Any]]:
         """Execute a query with a timeout and return results as a list of dictionaries."""
-        return self.execute_query(query,params)
+        return self.execute_query(query, params)
 
-    def get_table_schema(self,table_name:str)->Dict[str,str]:
+    def get_table_schema(self, table_name: str) -> Dict[str, str]:
         """Get the schema of a table as a dictionary."""
         query = f"PRAGMA table_info({table_name})"
 
@@ -99,19 +109,19 @@ class DatabaseManager:
                     raise ValueError(f"Table '{table_name}' does not exist.")
 
                 type_mapping = {
-                    "INTEGER":"INTEGER",
-                    "INT":"INTEGER",
-                    "REAL":"REAL",
-                    "FLOAT":"REAL",
-                    "DOUBLE":"REAL",
-                    "TEXT":"TEXT",
-                    "VARCHAR":"TEXT",
-                    "CHAR":"TEXT",
-                    "BLOB":"BLOB",
-                    "NUMERIC":"NUMERIC",
-                    "DATE":"DATE",
-                    "DATETIME":"DATETIME",
-                    "TIMESTAMP":"TIMESTAMP",
+                    "INTEGER": "INTEGER",
+                    "INT": "INTEGER",
+                    "REAL": "REAL",
+                    "FLOAT": "REAL",
+                    "DOUBLE": "REAL",
+                    "TEXT": "TEXT",
+                    "VARCHAR": "TEXT",
+                    "CHAR": "TEXT",
+                    "BLOB": "BLOB",
+                    "NUMERIC": "NUMERIC",
+                    "DATE": "DATE",
+                    "DATETIME": "DATETIME",
+                    "TIMESTAMP": "TIMESTAMP",
                 }
 
                 schema = {}
@@ -119,7 +129,7 @@ class DatabaseManager:
                     col_name = row["name"].lower()
                     col_type = row["type"].upper() if row["type"] else "TEXT"
 
-                    for sqlite_type,sql_type in type_mapping.items():
+                    for sqlite_type, sql_type in type_mapping.items():
                         if sql_type in col_type:
                             col_type = sql_type
                             break
@@ -128,7 +138,7 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Database operation error: {e}")
 
-    def get_table_info(self,table_name:str) -> List[Dict[str,Any]]:
+    def get_table_info(self, table_name: str) -> List[Dict[str, Any]]:
         """Get information about a table as a list of dictionaries."""
         query = f"PRAGMA table_info({table_name})"
         try:
@@ -139,7 +149,7 @@ class DatabaseManager:
             logger.error(f"Database operation error: {e}")
             raise
 
-    def table_exists(self,table_name:str) -> bool:
+    def table_exists(self, table_name: str) -> bool:
         """Check if a table exists in the database."""
         query = """
         SELECT name 
@@ -148,13 +158,13 @@ class DatabaseManager:
         """
         try:
             with self._get_cursor() as cursor:
-                cursor.execute(query,(table_name,))
+                cursor.execute(query, (table_name,))
                 return cursor.fetchone() is not None
         except Exception as e:
             logger.error(f"Database operation error: {e}")
             raise
 
-    def get_row_count(self,table_name:str)->int:
+    def get_row_count(self, table_name: str) -> int:
         """Get the number of rows in a table."""
         query = f"SELECT COUNT(*) FROM {table_name}"
         try:
@@ -179,6 +189,7 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Database operation error: {e}")
             return []
+
     def close(self):
         """Close the database connection."""
         if hasattr(self._local, "connection"):
@@ -187,8 +198,25 @@ class DatabaseManager:
             logger.info("Database connection closed.")
 
 
-db_manager = DatabaseManager(db_config.get_connection_string)
+# Global database manager instance - will be recreated when database path changes
+db_manager = DatabaseManager()
+
 
 def get_db_manager() -> DatabaseManager:
     """Get the singleton database manager instance."""
     return db_manager
+
+
+def create_db_manager(db_path: Optional[str] = None) -> DatabaseManager:
+    """Create a new database manager with the specified path."""
+    return DatabaseManager(db_path)
+
+
+def update_db_manager_path(db_path: str) -> None:
+    """Update the global database manager with a new database path."""
+    global db_manager
+    # Close existing connections
+    if db_manager:
+        db_manager.close()
+    # Create new manager with new path
+    db_manager = DatabaseManager(db_path)

@@ -177,7 +177,7 @@ class ExplorationService:
             if not tables:
                 return "No tables found in the database."
 
-            result = f"Database overview - Found {len(tables) tables}\n\n"
+            result = f"Database overview - Found {len(tables)} tables.\n\n"
             for table in tables:
                 try:
                     row_count = self.db_manager.get_table_row_count(table)
