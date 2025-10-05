@@ -51,16 +51,4 @@ class DatabaseConfig:
         return self.db_path
 
 
-# Global configuration instance - will be updated when database path is set
 db_config = DatabaseConfig()
-
-
-def set_database_path(db_path: str) -> None:
-    """Set the global database path for the MCP server."""
-    global db_config
-    db_config.set_database_path(db_path)
-
-
-def get_database_path() -> str:
-    """Get the current database path."""
-    return db_config.db_path

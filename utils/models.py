@@ -4,8 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class MCPRequest(BaseModel):
-    """Request model for mcp queries.
-    """
+    """Request model for mcp queries."""
 
     user_text: str = Field(
         ..., description="The query input from the user in natural langauge."
@@ -17,11 +16,11 @@ class MCPRequest(BaseModel):
     limit: Optional[int] = Field(
         5, description="The number of results to return from the query."
     )
+    db_path: Optional[str] = Field(None, description="The path to the database file.")
 
 
 class MCPResponse(BaseModel):
-    """Response model for mcp queries.
-    """
+    """Response model for mcp queries."""
 
     sql_preview: str = Field(
         ..., description="The SQL query generated from the user input."
@@ -45,7 +44,9 @@ class MCPResponse(BaseModel):
 class QueryFilter(BaseModel):
     """Model for a filter applied to a query."""
 
-    columns: List[str] = Field(default_factory=list, description="The columns the filter is applied to.")
+    columns: List[str] = Field(
+        default_factory=list, description="The columns the filter is applied to."
+    )
     filters: Dict[str, Any] = Field(
         default_factory=dict, description="A mapping of column names to filter values."
     )
@@ -64,24 +65,21 @@ class QueryFilter(BaseModel):
 
 
 class TablePreviewRequest(BaseModel):
-    """Request model for table preview.
-    """
+    """Request model for table preview."""
 
     table: str = Field(..., description="The table to preview.")
     limit: int = Field(5, description="The number of rows to return from the table.")
 
 
 class ColumnStatsRequest(BaseModel):
-    """Request model for column statistics.
-    """
+    """Request model for column statistics."""
 
     table: str = Field(..., description="The table to get column statistics from.")
     column: Optional[str] = Field(..., description="The column to get statistics for.")
 
 
 class FindTablesRequest(BaseModel):
-    """Request model for finding tables.
-    """
+    """Request model for finding tables."""
 
     column_name: str = Field(
         ..., description="The column name to search for in the database schema."
@@ -89,22 +87,21 @@ class FindTablesRequest(BaseModel):
 
 
 class TableSchemaRequest(BaseModel):
-    """Request model for table schema.
-    """
+    """Request model for table schema."""
 
     table: str = Field(..., description="The table to get the schema for.")
 
 
 class DataBaseConnectionRequest(BaseModel):
-    """Request model for database connection.
-    """
+    """Request model for database connection."""
+
+    db_path: Optional[str] = Field(None, description="The path to the database file.")
 
     pass  # No fields required for this request
 
 
 class ErrorResponse(BaseModel):
-    """Response model for errors.
-    """
+    """Response model for errors."""
 
     error: str = Field(..., description="The error message.")
     details: Optional[str] = Field(

@@ -137,6 +137,7 @@ class DatabaseManager:
                 return schema
         except Exception as e:
             logger.error(f"Database operation error: {e}")
+            raise
 
     def get_table_info(self, table_name: str) -> List[Dict[str, Any]]:
         """Get information about a table as a list of dictionaries."""
@@ -157,7 +158,7 @@ class DatabaseManager:
         WHERE type='table' AND name=?
         """
         try:
-            with self._get_cursor() as cursor:
+            with self.get_cursor() as cursor:
                 cursor.execute(query, (table_name,))
                 return cursor.fetchone() is not None
         except Exception as e:
@@ -168,9 +169,10 @@ class DatabaseManager:
         """Get the number of rows in a table."""
         query = f"SELECT COUNT(*) FROM {table_name}"
         try:
-            with self._get_cursor() as cursor:
+            with self.get_cursor() as cursor:
                 cursor.execute(query)
-                return cursor.fetchone()
+                result = cursor.fetchone()
+                return result["COUNT(*)"] if result else 0
         except Exception as e:
             logger.error(f"Database operation error: {e}")
             raise
@@ -183,7 +185,7 @@ class DatabaseManager:
                  ORDER BY name
                  """
         try:
-            with self._get_cursor() as cursor:
+            with self.get_cursor() as cursor:
                 cursor.execute(query)
                 return [row["name"] for row in cursor.fetchall()]
         except Exception as e:
@@ -198,25 +200,6 @@ class DatabaseManager:
             logger.info("Database connection closed.")
 
 
-# Global database manager instance - will be recreated when database path changes
-db_manager = DatabaseManager()
-
-
-def get_db_manager() -> DatabaseManager:
+def get_db_manager(db_path: Optional[str] = None) -> DatabaseManager:
     """Get the singleton database manager instance."""
-    return db_manager
-
-
-def create_db_manager(db_path: Optional[str] = None) -> DatabaseManager:
-    """Create a new database manager with the specified path."""
     return DatabaseManager(db_path)
-
-
-def update_db_manager_path(db_path: str) -> None:
-    """Update the global database manager with a new database path."""
-    global db_manager
-    # Close existing connections
-    if db_manager:
-        db_manager.close()
-    # Create new manager with new path
-    db_manager = DatabaseManager(db_path)

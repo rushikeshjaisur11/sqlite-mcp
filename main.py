@@ -12,8 +12,7 @@ from utils import (
     TableSchemaRequest,
     DataBaseConnectionRequest,
 )
-from utils.config import set_database_path, get_database_path
-from utils.database import update_db_manager_path
+from typing import Optional
 
 mcp = FastMCP("sqlite-mcp")
 service = get_sqlite_service()
@@ -25,14 +24,19 @@ async def query_sqlite_table(
     table: str,
     rows_budget: int = MAX_ROWS_BUDGET,
     limit: int = MAX_PREVIESW_ROWS,
+    db_path: Optional[str] = None,
 ) -> str:
     """Query a SQLite table.
     Provide table name in query or as a parameter"""
 
     request = MCPRequest(
-        user_text=user_text, table=table, rows_budget=rows_budget, limit=limit
+        user_text=user_text,
+        table=table,
+        rows_budget=rows_budget,
+        limit=limit,
+        db_path=db_path,
     )
-    return service.quert_table(request)
+    return service.query_table(request)
 
 
 @mcp.tool
@@ -76,46 +80,44 @@ async def get_database_overview() -> str:
 
 
 @mcp.tool
-async def test_connection() -> str:
+async def test_connection(db_path: Optional[str] = None) -> str:
     """Test the connection to the database."""
-    request = DataBaseConnectionRequest()
+    request = DataBaseConnectionRequest(db_path=db_path)
     return service.test_connection(request)
 
 
 @mcp.tool
-async def set_database_file_path(database_path: str) -> str:
-    """Set the database file path for the MCP server.
-
-    Args:
-        database_path: The path to the SQLite database file
-
-    Returns:
-        Confirmation message with the new database path
-    """
-    try:
-        # Update the global configuration
-        set_database_path(database_path)
-
-        # Update the database manager with the new path
-        update_db_manager_path(database_path)
-
-        # Test the new connection
-        request = DataBaseConnectionRequest()
-        test_result = service.test_connection(request)
-
-        return f"Database path successfully set to: {database_path}\n\nConnection test result:\n{test_result}"
-    except Exception as e:
-        return f"Error setting database path to '{database_path}': {str(e)}"
+async def list_all_tables_with_path(db_path: Optional[str] = None) -> str:
+    """List all tables in the database with optional database path."""
+    return service.get_all_tables_with_path(db_path)
 
 
 @mcp.tool
-async def get_current_database_path() -> str:
-    """Get the current database file path being used by the MCP server.
+async def simple_query(sql: str, db_path: Optional[str] = None) -> str:
+    """Execute a simple SQL query directly on the database."""
+    try:
+        from utils.database import get_db_manager
 
-    Returns:
-        The current database path
-    """
-    return f"Current database path: {get_database_path()}"
+        db_manager = get_db_manager(db_path)
+        results = db_manager.execute_query(sql)
+
+        if not results:
+            return "No results found."
+
+        # Format results
+        output = []
+        if results:
+            columns = list(results[0].keys())
+            output.append(f"Columns: {', '.join(columns)}")
+            output.append(f"Rows: {len(results)}")
+            output.append("")
+
+            for i, row in enumerate(results, 1):
+                output.append(f"Row {i}: {dict(row)}")
+
+        return "\n".join(output)
+    except Exception as e:
+        return f"Error: {e}"
 
 
 if __name__ == "__main__":

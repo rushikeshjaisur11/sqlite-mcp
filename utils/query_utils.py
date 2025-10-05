@@ -21,8 +21,8 @@ logger = get_logger(__name__)
 class QueryService:
     """Service for building and executing database queries."""
 
-    def __init__(self):
-        self._db_manager = get_db_manager()
+    def __init__(self, db_path: Optional[str] = None):
+        self._db_manager = get_db_manager(db_path)
 
     def _determine_table_ref(
         self, request: MCPRequest, query_filter: QueryFilter
@@ -43,7 +43,7 @@ class QueryService:
         table_schema: dict,
         query_filter: QueryFilter,
         limit: int,
-        row_count: int
+        row_count: int,
     ) -> tuple[str, dict, list[str]]:
         """Build the SQL query based on the table schema and query filter."""
         auto_applied = []
@@ -52,6 +52,9 @@ class QueryService:
             valid_columns = [
                 col for col in query_filter.columns if col.lower() in table_schema
             ]
+        else:
+            # If no columns specified, use all columns from schema
+            valid_columns = list(table_schema.keys())
 
         if not valid_columns:
             raise ValueError("No valid columns found in the query filter.")
@@ -86,11 +89,21 @@ class QueryService:
             date_column,
         )
 
+        # Debug: Check if columns and table_name are valid
+        if not columns:
+            raise ValueError(f"No columns found for table {table_name}")
+        if not table_name:
+            raise ValueError("Table name is required")
+
         select_clause = f"SELECT {', '.join(columns)} FROM {table_name}"
         from_clause = f" FROM {table_name}"
         where_clause = (
             f" WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
         )
+
+        # Initialize clauses
+        group_by_clause = ""
+        order_by_clause = ""
 
         # Add group by if specified
         if query_filter.group_by:
@@ -104,11 +117,12 @@ class QueryService:
         if query_filter.order_by:
             order_by_clause = f" ORDER BY {query_filter.order_by}"
         elif not group_by_clause:
-            order_by_clause = f"ORDER BY {columns[0]}"
+            order_by_clause = f" ORDER BY {columns[0]}"
 
         # Add LIMIT
-        limit_clause = f" LIMIT {limit}"
-        params["limit"] = limit
+        limit_clause = f" LIMIT {limit or 10}"
+        if "limit" not in params:
+            params["limit"] = limit or 10
 
         sql_parts = [select_clause, from_clause]
         if where_clause:
@@ -165,7 +179,7 @@ class QueryService:
                     note=f"Table '{table_name}' does not exist.",
                 )
             table_schema = self._db_manager.get_table_schema(table_name)
-            row_count = self._db_manager.get_table_row_count(table_name)
+            row_count = self._db_manager.get_row_count(table_name)
 
             # Build SQL query
 
@@ -174,7 +188,7 @@ class QueryService:
                 table_schema,
                 query_filter,
                 request.limit or DEFAULT_LIMIT,
-                row_count or MAX_ROWS_BUDGET
+                row_count or MAX_ROWS_BUDGET,
             )
 
             # Estimate query cost
@@ -256,6 +270,8 @@ class QueryService:
 query_service = QueryService()
 
 
-def get_query_service() -> QueryService:
+def get_query_service(db_path: Optional[str] = None) -> QueryService:
     """Get the QueryService instance."""
+    if db_path:
+        return QueryService(db_path)
     return query_service
