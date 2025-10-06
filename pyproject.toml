@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "sqllite-mcp"
 version = "0.1.0"
@@ -10,8 +14,11 @@ dependencies = [
     "pydantic>=2.11.10",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
 [project.scripts]
-sqllite-mcp = "main:main"
+sqlite-mcp = "src.main:main"
 
 [tool.ruff]
 line-length = 88

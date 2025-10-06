@@ -1,7 +1,7 @@
 import asyncio
 from fastmcp import FastMCP
 
-from .utils import (
+from src.utils import (
     MAX_ROWS_BUDGET,
     MAX_PREVIESW_ROWS,
     get_sqlite_service,
@@ -96,9 +96,11 @@ async def test_connection(db_path: Optional[str] = None) -> str:
     service = get_sqlite_service(db_path)
     return service.test_connection(request)
 
+
 def main():
     """Starts MCP server"""
-    mcp.run(transport='stdio')
+    mcp.run(transport="stdio")
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
