@@ -96,6 +96,8 @@ async def test_connection(db_path: Optional[str] = None) -> str:
     service = get_sqlite_service(db_path)
     return service.test_connection(request)
 
+def main():
+    mcp.run(transport='stdio')
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
