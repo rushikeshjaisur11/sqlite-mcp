@@ -22,7 +22,6 @@ This project uses `uv` for dependency management. Make sure you have `uv` instal
     - Search for tables by column name and inspect schema information.
 
     ---
-
     ## Quick start (Windows - cmd.exe)
 
     1. Clone the repository and change directory:
@@ -39,8 +38,6 @@ This project uses `uv` for dependency management. Make sure you have `uv` instal
     ```
 
     This starts the MCP server and listens for MCP calls over stdio.
-
-    If you prefer an HTTP wrapper (FastAPI + uvicorn), see "HTTP API" below.
 
     ---
 
