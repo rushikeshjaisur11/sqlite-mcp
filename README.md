@@ -45,14 +45,7 @@ This project uses `uv` for dependency management. Make sure you have `uv` instal
 
     - Python 3.10+ (or the version used by the project).
     - `uv` (used to run the MCP server). If you don't have `uv`, install it per the tool's docs.
-    - For the optional HTTP API: `fastapi` and `uvicorn`.
-
-    Install optional Python dependencies:
-
-    ```cmd
-    python -m pip install fastapi uvicorn
-    ```
-
+    
     ---
 
     ## Usage
