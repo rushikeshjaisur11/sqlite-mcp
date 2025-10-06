@@ -60,26 +60,6 @@ This project uses `uv` for dependency management. Make sure you have `uv` instal
 
     ## Usage
 
-    There are three common integration patterns you can use:
-
-    1. CLI — call the core service functions directly from a simple script.
-    2. MCP — run the project with `uv run sqlite-mcp` to expose MCP tools.
-    3. HTTP API — wrap the same service with FastAPI and run with `uvicorn`.
-
-    Below are examples and notes for each.
-
-    ### CLI (local scripts)
-
-    Create a tiny `cli.py` that imports the project's service functions (e.g. from `utils.sqllite_service`) and calls them. Example usage from `cmd.exe`:
-
-    ```cmd
-    python cli.py set-db "C:\path\to\database.db"
-    python cli.py get-db
-    python cli.py test-conn
-    ```
-
-    This is useful for automation and debugging without MCP or HTTP.
-
     ### Running as an MCP server (uv)
 
     Start the server:
@@ -131,22 +111,6 @@ This project uses `uv` for dependency management. Make sure you have `uv` instal
     ```
 
     Note: adjust paths for Windows escaping when required.
-
-    ### HTTP API (FastAPI + uvicorn)
-
-    If you want remote/HTTP access, create a small `api.py` that imports the same service layer and exposes endpoints (example shown in the project issues). Then run:
-
-    ```cmd
-    python -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload
-    ```
-
-    Example curl (Windows `cmd.exe`) usage — be careful with JSON quoting on cmd.exe:
-
-    ```cmd
-    curl -X POST "http://127.0.0.1:8000/set-db" -H "Content-Type: application/json" -d "{\"path\":\"C:\\path\\to\\my.db\"}"
-    curl "http://127.0.0.1:8000/get-db"
-    curl "http://127.0.0.1:8000/test-conn"
-    ```
 
     ---
 
