@@ -95,7 +95,7 @@ class QueryService:
         if not table_name:
             raise ValueError("Table name is required")
 
-        select_clause = f"SELECT {', '.join(columns)} FROM {table_name}"
+        select_clause = f"SELECT {', '.join(columns)}"
         from_clause = f" FROM {table_name}"
         where_clause = (
             f" WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
@@ -139,23 +139,23 @@ class QueryService:
         """Add sampling to the given SQL query."""
         if "WHERE" in sql.upper():
             sql = sql.replace(
-                "WHERE", f"WHERE ABS(RANDOM()) < {int(sampling_rate * 100)} AND ", 1
+                "WHERE", f"WHERE ABS(RANDOM()%100) < {int(sampling_rate * 100)} AND ", 1
             )
         else:
             if "ORDER BY" in sql.upper():
                 sql = sql.replace(
                     "ORDER BY",
-                    f"WHERE ABS(RANDOM()) < {int(sampling_rate * 100)} ORDER BY ",
+                    f"WHERE ABS(RANDOM()%100) < {int(sampling_rate * 100)} ORDER BY ",
                     1,
                 )
             elif "LIMIT" in sql.upper():
                 sql = sql.replace(
                     "LIMIT",
-                    f"WHERE ABS(RANDOM()) < {int(sampling_rate * 100)} LIMIT ",
+                    f"WHERE ABS(RANDOM()%100) < {int(sampling_rate * 100)} LIMIT ",
                     1,
                 )
             else:
-                sql += f" WHERE ABS(RANDOM()) < {int(sampling_rate * 100)}"
+                sql += f" WHERE ABS(RANDOM()%100) < {int(sampling_rate * 100)}"
         return sql
 
     def process_mcp_request(self, request: MCPRequest) -> MCPResponse:
@@ -190,7 +190,7 @@ class QueryService:
                 request.limit or DEFAULT_LIMIT,
                 row_count or MAX_ROWS_BUDGET,
             )
-
+            params = {key:value for key,value in params.items() if key.lower() !='limit'}
             # Estimate query cost
             where_conditions = []
             if "WHERE" in sql:

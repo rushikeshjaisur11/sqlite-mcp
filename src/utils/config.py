@@ -12,7 +12,7 @@ MAX_QUERY_TIMEOUT = 300  # in seconds
 
 # Performance configuration
 MAX_ROWS_BUDGET = 1000000  # Maximum number of rows to process in a query
-SAMPLING_RATE = 0.01  # Sampling rate for large datasets
+SAMPLING_RATE = 0.1  # Sampling rate for large datasets
 
 # Data column candidates
 
