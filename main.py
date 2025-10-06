@@ -1,7 +1,7 @@
 import asyncio
 from fastmcp import FastMCP
 
-from utils import (
+from .utils import (
     MAX_ROWS_BUDGET,
     MAX_PREVIESW_ROWS,
     get_sqlite_service,
