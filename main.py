@@ -97,6 +97,7 @@ async def test_connection(db_path: Optional[str] = None) -> str:
     return service.test_connection(request)
 
 def main():
+    """Starts MCP server"""
     mcp.run(transport='stdio')
 
 if __name__ == "__main__":
