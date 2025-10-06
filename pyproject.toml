@@ -13,6 +13,14 @@ dependencies = [
     "mcp>=1.16.0",
     "pydantic>=2.11.10",
 ]
+authors = [
+   { name="Rushikesh Jaisur",email="rushikeshjaisur11@gmail.com"}
+]
+maintainers = [
+    { name="Rushikesh Jaisur",email="rushikeshjaisur11@gmail.com"}
+]
+license = "MIT"
+license-files = ["LICEN[CS]E.*"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
