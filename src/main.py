@@ -3,7 +3,7 @@ from fastmcp import FastMCP
 
 from src.utils import (
     MAX_ROWS_BUDGET,
-    MAX_PREVIESW_ROWS,
+    MAX_PREVIEW_ROWS,
     get_sqlite_service,
     MCPRequest,
     TablePreviewRequest,
@@ -22,7 +22,7 @@ async def query_sqlite_table(
     user_text: str,
     table: Optional[str] = None,
     rows_budget: int = MAX_ROWS_BUDGET,
-    limit: int = MAX_PREVIESW_ROWS,
+    limit: int = MAX_PREVIEW_ROWS,
     db_path: Optional[str] = None,
 ) -> str:
     """Query a SQLite table.

@@ -32,7 +32,7 @@ class QueryService:
         if request.table:
             return normalize_table_ref(request.table)
         # Try to extract from user text
-        match = re.search(r"from\s+([azA-Z0-9_\.]+)", request.user_text, re.IGNORECASE)
+        match = re.search(r"from\s+([a-zA-Z0-9_\.]+)", request.user_text, re.IGNORECASE)
         if match:
             return match.group(1)
         raise ValueError("Table name could not be determined from the request.")
@@ -269,6 +269,4 @@ class QueryService:
 
 def get_query_service(db_path: Optional[str] = None) -> QueryService:
     """Get the QueryService instance."""
-    if db_path:
-        return QueryService(db_path)
-    return query_service
+    return QueryService(db_path)

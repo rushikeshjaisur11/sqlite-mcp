@@ -37,8 +37,8 @@ class ExplorationService:
 
             rows = self.db_manager.execute_query(query, {"limit": limit})
             result = (
-                f"Preview of table '{table} "
-                f"Showing {len(columns)} columns and {len(rows)}"
+                f"Preview of table '{table}'\n"
+                f"Showing {len(columns)} columns and {len(rows)} rows\n"
             )
             if rows:
                 result += "Columns: " + ", ".join(columns) + "\n\n"
@@ -166,8 +166,8 @@ class ExplorationService:
                 return f"No tables found with column '{column_name}'."
 
             result = f"Tables containing column '{column_name}':\n"
-            for table, col, dtype in matches:
-                result += f"  {table} - {col} - {dtype}\n"
+            for entry in matches:
+                result += f"  {entry}\n"
             return result
         except Exception as e:
             logger.error(f"Error finding tables by column: {e}")
@@ -190,7 +190,7 @@ class ExplorationService:
                     col_count = len(table_schema)
                     result += f"   - {table}: {row_count} rows, {col_count} columns\n"
                 except Exception as e:
-                    logger.warning("Failed to get info for table {table}: {e}")
+                    logger.warning(f"Failed to get info for table {table}: {e}")
                     result += f"   - {table}: (info unavailable)\n"
             return result
         except Exception as e:
@@ -264,7 +264,7 @@ class ExplorationService:
             result += "\n"
 
             if response.rows:
-                results += format_query_results(response.rows, limit or 10)
+                result += format_query_results(response.rows, limit or 10)
             elif response.note:
                 result += f"Note: {response.note}\n"
 

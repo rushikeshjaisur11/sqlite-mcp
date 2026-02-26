@@ -6,7 +6,7 @@ DATABASE_PATH = os.getenv("DATABASE_PATH", "database.db")
 
 # Query configuration
 DEFAULT_LIMIT = 50
-MAX_PREVIESW_ROWS = 50
+MAX_PREVIEW_ROWS = 50
 DEFAULT_WINDOW_DAYS = 365
 MAX_QUERY_TIMEOUT = 300  # in seconds
 
