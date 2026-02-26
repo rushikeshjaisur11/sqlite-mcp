@@ -79,8 +79,8 @@ def extract_query_components(user_text:str)-> QueryFilter:
     date_range_match = re.search(r'([a-zA-Z0-9_]+)\s+between\s+[\'"]([^"\']+)[\'"]\s+and\s+[\'"]([^"\']+)[\'"]', user_text, re.IGNORECASE)
 
     if date_range_match:
-        result.start_date = date_range_match.group(1).strip()
-        result.end_date = date_range_match.group(2).strip()
+        result.start_date = date_range_match.group(2).strip()
+        result.end_date = date_range_match.group(3).strip()
         logger.debug(f"Extracted date range: {result.start_date} to {result.end_date}")
     else:
         last_days_match = re.search(r"last\s+(\d+)\s+days", user_text, re.IGNORECASE)
@@ -238,7 +238,7 @@ def format_query_results(rows:List[Dict[str,Any]],limit:int=10)-> str:
     if not rows:
         return "No results found."
 
-    results = f"Reults {len(rows)} rows:\n\n"
+    results = f"Results {len(rows)} rows:\n\n"
 
     if rows:
         columns = list(rows[0].keys())

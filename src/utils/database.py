@@ -1,3 +1,4 @@
+import re
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -7,6 +8,14 @@ from .config import MAX_QUERY_TIMEOUT, db_config
 from .logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _sanitize_identifier(name: str) -> str:
+    """Strip all characters that are not safe for SQL identifiers."""
+    sanitized = re.sub(r"[^a-zA-Z0-9_]", "", name)
+    if sanitized and sanitized[0].isdigit():
+        sanitized = "_" + sanitized
+    return sanitized
 
 
 def dict_factory(cursor, row):
@@ -98,7 +107,7 @@ class DatabaseManager:
 
     def get_table_schema(self, table_name: str) -> Dict[str, str]:
         """Get the schema of a table as a dictionary."""
-        query = f"PRAGMA table_info({table_name})"
+        query = f"PRAGMA table_info({_sanitize_identifier(table_name)})"
         try:
             with self.get_cursor() as cursor:
                 cursor.execute(query)
@@ -142,7 +151,7 @@ class DatabaseManager:
 
     def get_table_info(self, table_name: str) -> List[Dict[str, Any]]:
         """Get information about a table as a list of dictionaries."""
-        query = f"PRAGMA table_info({table_name})"
+        query = f"PRAGMA table_info({_sanitize_identifier(table_name)})"
         try:
             with self.get_cursor() as cursor:
                 cursor.execute(query)
@@ -153,14 +162,10 @@ class DatabaseManager:
 
     def table_exists(self, table_name: str) -> bool:
         """Check if a table exists in the database."""
-        query = f"""
-        SELECT name 
-        FROM sqlite_master 
-        WHERE type='table' AND lower(name) ='{table_name}'
-        """
+        query = "SELECT name FROM sqlite_master WHERE type='table' AND lower(name) = lower(?)"
         try:
             with self.get_cursor() as cursor:
-                cursor.execute(query)
+                cursor.execute(query, (table_name,))
                 return cursor.fetchone() is not None
         except Exception as e:
             logger.error(f"Database operation error: {e}")
@@ -168,7 +173,7 @@ class DatabaseManager:
 
     def get_row_count(self, table_name: str) -> int:
         """Get the number of rows in a table."""
-        query = f"SELECT COUNT(*) FROM {table_name}"
+        query = f"SELECT COUNT(*) FROM {_sanitize_identifier(table_name)}"
         try:
             with self.get_cursor() as cursor:
                 cursor.execute(query)
